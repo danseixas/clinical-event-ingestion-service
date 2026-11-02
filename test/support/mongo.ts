@@ -13,9 +13,20 @@ export interface TestMongo {
   stop: () => Promise<void>;
 }
 
-export async function startMongo(dbName: string): Promise<TestMongo> {
+export interface StartMongoOptions {
+  /** Allows `configureFailPoint` (used to simulate store errors). */
+  enableTestCommands?: boolean;
+}
+
+export async function startMongo(
+  dbName: string,
+  options: StartMongoOptions = {},
+): Promise<TestMongo> {
   const replSet = await MongoMemoryReplSet.create({
     replSet: { count: 1 },
+    ...(options.enableTestCommands
+      ? { instanceOpts: [{ args: ['--setParameter', 'enableTestCommands=1'] }] }
+      : {}),
     binary: { version: pkg.config.mongodbMemoryServer.version },
   });
   return {

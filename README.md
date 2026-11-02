@@ -87,6 +87,7 @@ All settings come from environment variables and have defaults. The app validate
 | `BACKOFF_BASE_MS` | `1000` | Base delay for exponential backoff between attempts |
 | `BACKOFF_MAX_MS` | `60000` | Maximum backoff delay. Must be at least `BACKOFF_BASE_MS` |
 | `SHUTDOWN_TIMEOUT_MS` | `20000` | How long shutdown waits for in-flight events |
+| `WORKER_ENABLED` | `true` | Run the background worker in this process (`true` or `false`) |
 | `APP_PORT` | `3000` | Compose only: host port mapped to the app |
 
 ## Why MongoDB 7.0

@@ -51,6 +51,7 @@ services:
       - BACKOFF_BASE_MS
       - BACKOFF_MAX_MS
       - SHUTDOWN_TIMEOUT_MS
+      - WORKER_ENABLED
     healthcheck:
       test:
         - CMD

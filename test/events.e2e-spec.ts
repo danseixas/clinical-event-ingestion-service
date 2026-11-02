@@ -41,6 +41,7 @@ describe('POST /events (e2e)', () => {
     app = await createTestApp({
       mongoUri: mongo.uri,
       logger,
+      env: { WORKER_ENABLED: 'false' },
       configure: (builder) =>
         builder.overrideProvider(MONGO_CLIENT).useFactory({
           factory: () => {

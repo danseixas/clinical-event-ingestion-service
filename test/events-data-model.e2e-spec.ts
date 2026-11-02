@@ -86,6 +86,7 @@ describe('events data model (e2e)', () => {
     const app = await createTestApp({
       mongoUri: mongo.uri,
       logger,
+      env: { WORKER_ENABLED: 'false' },
       configure: (builder) =>
         builder.overrideProvider(MONGO_CLIENT).useFactory({
           factory: () => {

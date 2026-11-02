@@ -6,6 +6,7 @@ describe('startup failure (e2e)', () => {
     await expect(
       createTestApp({
         mongoUri: 'mongodb://127.0.0.1:1/x?directConnection=true',
+        env: { WORKER_ENABLED: 'false' },
       }),
     ).rejects.toThrow();
     expect(Date.now() - started).toBeLessThanOrEqual(15_000);

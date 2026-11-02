@@ -9,7 +9,10 @@ describe('App (e2e)', () => {
 
   beforeAll(async () => {
     mongo = await startMongo('health');
-    app = await createTestApp({ mongoUri: mongo.uri });
+    app = await createTestApp({
+      mongoUri: mongo.uri,
+      env: { WORKER_ENABLED: 'false' },
+    });
   }, 180_000);
 
   it('/health (GET)', () => {

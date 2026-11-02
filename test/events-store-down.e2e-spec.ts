@@ -12,7 +12,11 @@ describe('POST /events with the store down (e2e)', () => {
   beforeAll(async () => {
     mongo = await startMongo('store_down');
     logger = new CaptureLogger();
-    app = await createTestApp({ mongoUri: mongo.uri, logger });
+    app = await createTestApp({
+      mongoUri: mongo.uri,
+      logger,
+      env: { WORKER_ENABLED: 'false' },
+    });
   }, 180_000);
 
   afterAll(async () => {

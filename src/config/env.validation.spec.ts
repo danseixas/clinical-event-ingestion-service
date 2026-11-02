@@ -55,4 +55,33 @@ describe('validateEnv', () => {
       validateEnv({ WORKER_CONCURRENCY: '0', MAX_ATTEMPTS: '0' }),
     ).toThrow(/WORKER_CONCURRENCY[\s\S]*MAX_ATTEMPTS/);
   });
+
+  describe('WORKER_ENABLED', () => {
+    it.each([[{}], [{ WORKER_ENABLED: '' }], [{ WORKER_ENABLED: 'true' }]])(
+      'is true for %o',
+      (input) => {
+        expect(validateEnv(input).WORKER_ENABLED).toBe(true);
+      },
+    );
+
+    it('is false for "false"', () => {
+      expect(validateEnv({ WORKER_ENABLED: 'false' }).WORKER_ENABLED).toBe(
+        false,
+      );
+    });
+
+    it.each(['FALSE', 'yes', '1', ' true'])('rejects %j', (value) => {
+      expect(() => validateEnv({ WORKER_ENABLED: value })).toThrow(
+        'WORKER_ENABLED must be true or false',
+      );
+    });
+
+    it('lists it together with other problems', () => {
+      expect(() =>
+        validateEnv({ WORKER_ENABLED: 'yes', WORKER_CONCURRENCY: '0' }),
+      ).toThrow(
+        /WORKER_ENABLED must be true or false[\s\S]*WORKER_CONCURRENCY|WORKER_CONCURRENCY[\s\S]*WORKER_ENABLED must be true or false/,
+      );
+    });
+  });
 });

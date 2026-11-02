@@ -1,6 +1,7 @@
 import 'reflect-metadata';
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsInt,
   IsNumber,
   IsString,
@@ -69,6 +70,14 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(0)
   SHUTDOWN_TIMEOUT_MS: number = 20_000;
+
+  // Runs the background worker in this process. Only the exact strings `true`
+  // and `false` are accepted: implicit conversion would turn 'false' into true.
+  @Transform(({ obj, key }: { obj: Record<string, unknown>; key: string }) =>
+    obj[key] === 'true' ? true : obj[key] === 'false' ? false : obj[key],
+  )
+  @IsBoolean({ message: 'WORKER_ENABLED must be true or false' })
+  WORKER_ENABLED: boolean = true;
 }
 
 export function validateEnv(
