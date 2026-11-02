@@ -113,7 +113,12 @@ describe('POST /events (e2e)', () => {
     const indexes = await events().listIndexes().toArray();
     expect(
       indexes.map((i) => i.name as string).sort((a, b) => a.localeCompare(b)),
-    ).toEqual(['_id_', 'idempotencyKey_unique']);
+    ).toEqual([
+      '_id_',
+      'claim_status_nextAttemptAt',
+      'idempotencyKey_unique',
+      'patient_read_order',
+    ]);
     const unique = indexes.find((i) => i.name === 'idempotencyKey_unique')!;
     expect(unique.unique).toBe(true);
     expect(unique.key).toEqual({ idempotencyKey: 1 });
