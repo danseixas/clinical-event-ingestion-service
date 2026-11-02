@@ -1,20 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import { App } from 'supertest/types.js';
-import { AppModule } from './../src/app.module.js';
+import { createTestApp } from './support/app.js';
+import { startMongo, TestMongo } from './support/mongo.js';
 
 describe('App (e2e)', () => {
-  let app: INestApplication<App>;
+  let mongo: TestMongo;
+  let app: NestExpressApplication;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+  beforeAll(async () => {
+    mongo = await startMongo('health');
+    app = await createTestApp({ mongoUri: mongo.uri });
+  }, 180_000);
 
   it('/health (GET)', () => {
     return request(app.getHttpServer())
@@ -23,7 +19,8 @@ describe('App (e2e)', () => {
       .expect({ status: 'ok' });
   });
 
-  afterEach(async () => {
-    await app.close();
-  });
+  afterAll(async () => {
+    await app?.close();
+    await mongo?.stop();
+  }, 60_000);
 });

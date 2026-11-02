@@ -32,11 +32,40 @@ npm run start:dev
 
 The default `MONGO_URI` points at this Mongo with `directConnection=true`. The replica set advertises itself as `mongo:27017`, a name that only resolves inside the Compose network.
 
+## POST /events
+
+Stores one event durably, then answers `202`. The app connects to MongoDB at startup and exits if it cannot, so start Mongo first.
+
+```bash
+curl -i -XPOST localhost:3000/events -H 'content-type: application/json' \
+  -d '{"patientId":"p-demo","type":"vitals","ts":"2026-11-02T10:00:00Z","data":{"hr":72}}'
+```
+
+| Field | Rule |
+|---|---|
+| `patientId` | string, not blank, at most 128 characters |
+| `type` | string, not blank, at most 64 characters |
+| `ts` | `YYYY-MM-DDTHH:mm:ss[.fraction](Z\|±HH:mm)`, uppercase `T`/`Z`, a real calendar instant between years 1970 and 9999. Fractions beyond milliseconds are truncated |
+| `data` | JSON object (`{}` allowed), content is free-form |
+
+Any other top-level field is rejected. Values are never trimmed or changed.
+
+| Status | Meaning |
+|---|---|
+| `202` | Stored with majority write concern. Body is `{ "id", "status", "duplicate" }`. `duplicate: true` means the same content was already stored: `id` and `status` are those of the original and nothing is written |
+| `400` | Validation failed (`message` is a list of fixed strings) or the JSON is malformed (`"Malformed JSON body"`). Nothing is stored |
+| `413` | Body larger than 100 kb |
+| `503` | The store could not confirm the write in time. Retrying is safe: the retry is idempotent |
+
+Duplicates are detected by content: the idempotency key is the SHA-256 of the canonical JSON of `{ data, patientId, ts, type }` (object keys sorted, `ts` normalized to UTC milliseconds). Key order, time zone notation and fraction length do not matter, but two real events with identical content are merged.
+
+Known limit: there is no authentication. Deploy the service behind a gateway or mTLS.
+
 ## Tests
 
 ```bash
 npm test           # unit tests
-npm run test:e2e   # end-to-end tests
+npm run test:e2e   # end-to-end tests (downloads MongoDB 7.0.45 on first run)
 npm run lint
 ```
 
