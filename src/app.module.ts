@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation.js';
 import { EventsModule } from './events/events.module.js';
 import { HealthModule } from './health/health.module.js';
+import { StatsModule } from './stats/stats.module.js';
 import { WorkerModule } from './worker/worker.module.js';
 
 @Module({
@@ -14,6 +15,7 @@ import { WorkerModule } from './worker/worker.module.js';
     }),
     HealthModule,
     EventsModule,
+    StatsModule,
     WorkerModule,
   ],
 })

@@ -40,8 +40,8 @@ describe('events worker with the store down (e2e)', () => {
       100,
     );
     const res = await request(app.getHttpServer()).get('/health');
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: 'ok' });
+    expect(res.status).toBe(503);
+    expect(res.body).toEqual({ status: 'error', mongo: 'down' });
     expect(unhandled).toEqual([]);
   }, 40_000);
 });

@@ -18,7 +18,7 @@ This starts a single-node MongoDB replica set and the app at <http://localhost:3
 APP_PORT=3001 docker compose up --build
 ```
 
-`GET /health` reports whether the app is up.
+The Compose healthcheck calls `GET /health`; see below.
 
 ### Without Docker for the app
 
@@ -60,6 +60,41 @@ Any other top-level field is rejected. Values are never trimmed or changed.
 Duplicates are detected by content: the idempotency key is the SHA-256 of the canonical JSON of `{ data, patientId, ts, type }` (object keys sorted, `ts` normalized to UTC milliseconds). Key order, time zone notation and fraction length do not matter, but two real events with identical content are merged.
 
 Known limit: there is no authentication. Deploy the service behind a gateway or mTLS.
+
+## GET /health
+
+Reports whether the app can reach MongoDB. It sends a `ping` and waits at most 1 second.
+
+| Status | Body |
+|---|---|
+| `200` | `{ "status": "ok", "mongo": "up" }` |
+| `503` | `{ "status": "error", "mongo": "down" }` (the ping failed or took longer than 1 second) |
+
+There is no draining or readiness state: during shutdown the answer depends on Mongo reachability alone. The Compose healthcheck reads this route, so the app shows as `unhealthy` while Mongo is down.
+
+## GET /stats
+
+Shows the backlog. Query parameters are ignored.
+
+```json
+{
+  "counts": { "pending": 5, "processing": 5, "done": 5, "failed": 2 },
+  "due": 3,
+  "expiredLeases": 1,
+  "oldestDueAgeMs": 10000,
+  "generatedAt": "2026-11-02T12:00:00.000Z"
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `counts.<status>` | Number of events with that status. All four keys are always present |
+| `due` | `pending` events whose `nextAttemptAt` has passed (claimable now) |
+| `expiredLeases` | `processing` events whose `lockedUntil` has passed (a subset of `processing`, claimable by reclaim) |
+| `oldestDueAgeMs` | How long the oldest due event has waited, in milliseconds. `0` when `due` is 0. Backoff waits do not count |
+| `generatedAt` | The instant used by every query of the request (ISO-8601, UTC) |
+
+`503` with `Event store unavailable, retry later` when the store cannot answer. The values come from the shared collection, so every replica reports the same numbers. The counts are separate queries, not a consistent snapshot: under concurrent changes their sum may differ slightly from the total. Counting `done` events scans index keys, so its cost grows with the size of the collection. Like the rest of the service there is no authentication: deploy it behind a gateway or mTLS.
 
 ## Tests
 
