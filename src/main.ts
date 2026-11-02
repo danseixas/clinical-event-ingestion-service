@@ -11,6 +11,7 @@ async function bootstrap() {
     appOptions,
   );
   configureApp(app);
+  app.enableShutdownHooks(['SIGTERM', 'SIGINT']);
   const config = app.get(ConfigService<EnvironmentVariables, true>);
   await app.listen(config.get('PORT', { infer: true }));
 }

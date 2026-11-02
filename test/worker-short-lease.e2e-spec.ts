@@ -36,7 +36,8 @@ describe('events worker write retry stops at the lease (e2e)', () => {
         LEASE_MS: '1500',
         PROCESSING_TIMEOUT_MS: '1000',
         PROCESSING_DELAY_MS: '50',
-        POLL_INTERVAL_MS: '50',
+        // Long poll: keeps the Phase 4 reclaim from running while the abandon is asserted.
+        POLL_INTERVAL_MS: '5000',
       }),
       configure: workerConfigure({
         uri: mongo.uri,

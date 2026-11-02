@@ -183,18 +183,18 @@ describe('events worker (e2e)', () => {
     expect(done).not.toHaveProperty('lockedUntil');
   });
 
-  it('CA-05 only claims due pending events', async () => {
+  it('CA-05 claims due pending and expired processing events', async () => {
     const future = new Date(Date.now() + 3_600_000);
     const past = new Date(Date.now() - 60_000);
     const due = seedEvent();
+    const expired = seedEvent({
+      status: 'processing',
+      attempts: 1,
+      workerId: 'old:1:aaaaaaaa',
+      lockedUntil: past,
+    });
     const others = [
       seedEvent({ nextAttemptAt: future }),
-      seedEvent({
-        status: 'processing',
-        attempts: 1,
-        workerId: 'old:1:aaaaaaaa',
-        lockedUntil: past,
-      }),
       seedEvent({
         status: 'processing',
         attempts: 1,
@@ -214,13 +214,18 @@ describe('events worker (e2e)', () => {
         lastError: { code: 'timeout', message: 'x', at: past },
       }),
     ];
-    await events().insertMany([due, ...others]);
+    await events().insertMany([due, expired, ...others]);
     const spy = new SpyProcessor(new ScriptedProcessor(() => 'success'));
     await boot(spy);
 
     await waitFor(async () => (await findDoc(due._id))?.status === 'done');
+    const reclaimed = await waitFor(async () => {
+      const d = await findDoc(expired._id);
+      return d?.status === 'done' && d;
+    });
+    expect(reclaimed.attempts).toBe(2);
     await new Promise((r) => setTimeout(r, 500));
-    expect(spy.calls).toHaveLength(1);
+    expect(spy.calls).toHaveLength(2);
     for (const other of others) {
       expect(await findDoc(other._id)).toEqual(other);
     }

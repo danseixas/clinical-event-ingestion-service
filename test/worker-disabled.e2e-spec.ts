@@ -71,5 +71,8 @@ describe('events worker disabled (e2e)', () => {
     expect(
       workerLines(logger).some((l) => l.message === 'Worker stopped'),
     ).toBe(false);
+    expect(
+      workerLines(logger).some((l) => l.message.startsWith('Worker stopping')),
+    ).toBe(false);
   });
 });

@@ -206,13 +206,17 @@ export const D10_PATTERNS: RegExp[] = [
   /^Worker started: concurrency \d+, workerId \S+:\d+:[0-9a-f]{8}$/,
   /^Worker disabled \(WORKER_ENABLED=false\)$/,
   /^Worker stopped$/,
-  /^Event [0-9a-f]{24} failed after \d+ attempts \((simulated_failure|timeout|processor_error)\)$/,
+  /^Event [0-9a-f]{24} failed after \d+ attempts \((simulated_failure|timeout|processor_error|lease_expired)\)$/,
   /^Stale write discarded for event [0-9a-f]{24} \(attempt \d+\)$/,
   /^Claim failed: \w+( \(code \S+\))?$/,
   /^Write for event [0-9a-f]{24} abandoned: \w+( \(code \S+\))?$/,
+  /^Reclaimed event [0-9a-f]{24} after lease expiry \(attempt \d+\)$/,
+  /^Worker stopping: \d+ attempts in flight$/,
+  /^Shutdown timeout after \d+ ms: \d+ attempts left for lease reclaim$/,
 ];
 
 export const D12_MESSAGES = [
   'Simulated external call failure',
   'External call failed',
+  'Lease expired before the attempt completed',
 ];
